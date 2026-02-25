@@ -462,8 +462,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 
   <div class="reg-form">
-    <input type="text" class="reg-in" id="teamIn" placeholder="Individual or Team name" maxlength="40" autocomplete="off">
-    <textarea class="reg-in reg-members" id="membersIn" placeholder="Team members (optional)" maxlength="120"></textarea>
+    <input type="text" class="reg-in" id="teamIn" placeholder="Your name" maxlength="40" autocomplete="off">
+    <textarea class="reg-in reg-members" id="membersIn" placeholder="Team members (optional)" maxlength="120" style="display:none"></textarea>
     <button class="btn-launch" id="startBtn">Launch Game →</button>
   </div>
 
@@ -568,7 +568,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
   <div class="score-grid" id="scoreGrid"></div>
   <div class="badges" id="resBadges"></div>
-  <button class="btn-go-lb" id="btnGoLB">View Leaderboard →</button>
+  <button class="btn-go-lb" id="btnGoLB" style="display:none">View Leaderboard →</button>
   <button class="btn-restart" onclick="location.reload()">Play Again</button>
   <div class="footer">
     © 2026 DigitalXperience.ai — All rights reserved. Unauthorised copying or reproduction prohibited.
