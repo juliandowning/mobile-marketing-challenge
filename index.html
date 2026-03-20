@@ -394,6 +394,32 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   width:300px;max-width:88vw;height:auto;
   filter: invert(1) hue-rotate(180deg) saturate(1.3);
 }
+/* ── BRIEF PANEL ── */
+.brief-panel{background:var(--card);border:1px solid rgba(143,195,46,.2);border-radius:12px;margin-bottom:18px;overflow:hidden;}
+.brief-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;gap:10px;}
+.brief-toggle-left{display:flex;align-items:center;gap:8px;font-family:'Open Sans',sans-serif;font-size:.78rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand1);}
+.brief-chevron{font-size:.75rem;color:var(--muted);transition:transform .25s;flex-shrink:0;}
+.brief-panel.open .brief-chevron{transform:rotate(180deg);}
+.brief-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border);}
+.brief-panel.open .brief-body{display:block;}
+.brief-scenario{font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:10px;padding-top:12px;}
+.brief-scenario strong{color:var(--text);}
+.brief-econ{background:rgba(143,195,46,.07);border:1px solid rgba(143,195,46,.15);border-radius:8px;padding:10px 13px;font-size:.8rem;color:var(--muted);line-height:1.7;}
+.brief-econ strong{color:var(--text);}
+
+/* ── DECISION SUMMARY ── */
+.decisions-strip{background:var(--card);border:1px solid rgba(136,156,231,.2);border-radius:12px;margin-bottom:18px;overflow:hidden;}
+.decisions-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;gap:10px;}
+.decisions-toggle-left{display:flex;align-items:center;gap:8px;font-family:'Open Sans',sans-serif;font-size:.78rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand2);}
+.decisions-chevron{font-size:.75rem;color:var(--muted);transition:transform .25s;flex-shrink:0;}
+.decisions-strip.open .decisions-chevron{transform:rotate(180deg);}
+.decisions-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border);}
+.decisions-strip.open .decisions-body{display:block;}
+.dec-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.82rem;}
+.dec-row:last-child{border-bottom:none;}
+.dec-label{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.5px;color:var(--muted);flex-shrink:0;min-width:110px;}
+.dec-val{color:var(--text);font-weight:700;}
+
 /* animations */
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
@@ -752,6 +778,7 @@ var FORMAT_DATA = {
   mix:    {label:'Mix (multiple)', cpaMod:0,  monthsMod:+1,  desc:'Broad creative coverage across formats'}
 };
 
+
 // ── GAME STATE ────────────────────────────────────
 var G = {
   team:'', members:'', phase:0,
@@ -768,102 +795,59 @@ var G = {
   completedAt:null
 };
 
-// ── ROUTING ────────────────────────────────────────
-(function route(){
-  if(window.location.search.includes('admin')||window.location.hash==='#admin') show('s-login');
-})();
+// ── BRIEF PANEL & DECISION SUMMARY BUILDERS ──────
 
-// ── UTILITIES ─────────────────────────────────────
-function show(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
-  document.getElementById(id).classList.add('on');
-  window.scrollTo(0,0);
-}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function closeModal(){document.getElementById('modal').classList.remove('on');}
+var BRIEF_HTML = [
+  '<div class="brief-panel" id="briefPanel">',
+  '<div class="brief-toggle" onclick="this.parentElement.classList.toggle(\'open\')">',
+  '<div class="brief-toggle-left"><span>&#128203;</span> NourishBox Brief</div>',
+  '<span class="brief-chevron">&#9660;</span>',
+  '</div>',
+  '<div class="brief-body">',
+  '<div class="brief-scenario"><strong>NourishBox</strong> is a UK subscription company delivering healthy snack boxes. Growth has slowed. Advertising costs are rising. Many customers cancel early.<br><br>Your task: build a profitable mobile-first strategy that lowers acquisition cost and improves retention.</div>',
+  '<div class="brief-econ">',
+  '<strong>Economic Constraints:</strong><br>',
+  'Monthly fee: <strong>&pound;25</strong> &nbsp;&middot;&nbsp; Gross margin: <strong>60%</strong> &nbsp;&middot;&nbsp; Monthly profit contribution: <strong>&pound;15</strong><br>',
+  'LTV = &pound;15 &times; months retained &nbsp;&middot;&nbsp; Profit = LTV &minus; Final CPA<br>',
+  'Your decisions shift both CPA and retention. Make them count.',
+  '</div></div></div>'
+].join('');
 
-function openTip(label,title,body){
-  document.getElementById('tipLabel').textContent=label;
-  document.getElementById('tipTitle').textContent=title;
-  document.getElementById('tipBody').innerHTML=body;
-  document.getElementById('tipBg').classList.add('on');
-}
-function closeTip(){document.getElementById('tipBg').classList.remove('on');}
-
-function flash(txt){
-  var el=document.getElementById('flash');
-  el.textContent=txt;el.style.display='block';
-  el.style.animation='none';el.offsetHeight;
-  el.style.animation='pop 1s ease forwards';
-  setTimeout(function(){el.style.display='none';},1000);
-}
-
-// ── ADMIN ─────────────────────────────────────────
-document.getElementById('btnLogin').addEventListener('click',function(){
-  if(document.getElementById('pwIn').value===ADMIN_PW){show('s-admin');admRefresh();}
-  else{document.getElementById('pwErr').classList.add('on');document.getElementById('pwIn').value='';}
-});
-document.getElementById('pwIn').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnLogin').click();});
-
-function getTeams(){
-  try{
-    var list=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
-    return list.map(function(n){try{return JSON.parse(localStorage.getItem(LS_TEAM+n));}catch(e){return null;}}).filter(Boolean);
-  }catch(e){return[];}
-}
-
-function admRefresh(){
-  var teams=getTeams().sort(function(a,b){return(b.spi||0)-(a.spi||0);});
-  document.getElementById('admCount').textContent=teams.length+' team'+(teams.length!==1?'s':'');
-  var rl={safe:'Safe',bal:'Balanced',bold:'Bold'};
-  var rc={safe:'rt-safe',bal:'rt-bal',bold:'rt-bold'};
-  var lb=document.getElementById('admLeader');
-  if(!teams.length){lb.innerHTML='<div class="lb-empty">No completed teams yet.</div>';document.getElementById('admText').innerHTML='';return;}
-  var h='<table class="adm-table"><thead><tr><th>#</th><th>Team</th><th>SPI</th><th>Profit</th><th>Months</th><th>CPA</th><th>Risk</th><th>Penalty</th><th>Bonus</th></tr></thead><tbody>';
-  teams.forEach(function(t,i){
-    var rtag=t.risk?'<span class="risk-tag '+rc[t.risk]+'">'+rl[t.risk]+'</span>':'—';
-    h+='<tr><td class="adm-spi">'+(i<3?['🥇','🥈','🥉'][i]:i+1)+'</td>';
-    h+='<td><strong>'+esc(t.team)+'</strong><br><span style="font-size:.75rem;color:var(--muted)">'+esc(t.members||'')+'</span></td>';
-    h+='<td class="adm-spi">'+(t.spi||0)+'</td>';
-    h+='<td style="color:'+(t.profit>=0?'var(--brand1)':'var(--red)')+';font-family:monospace">'+(t.profit>=0?'+':'')+'£'+t.profit.toFixed(2)+'</td>';
-    h+='<td>'+t.finalMonths+'</td><td>£'+t.finalCPA.toFixed(2)+'</td><td>'+rtag+'</td>';
-    h+='<td style="color:var(--red)">-'+(t.execPenalty||0)+'</td><td style="color:var(--brand1)">+'+(t.writtenBonus||0)+'</td></tr>';
-  });
-  lb.innerHTML=h+'</tbody></table>';
-  var ta=document.getElementById('admText');
-  var th='<table class="adm-table"><thead><tr><th>Team</th><th>P1 Strategy</th><th>P2 Channels</th><th>P3 Creative</th></tr></thead><tbody>';
-  teams.forEach(function(t){
-    th+='<tr><td><strong>'+esc(t.team)+'</strong></td>';
-    th+='<td style="font-size:.78rem;color:#aab;max-width:180px">'+esc(t.p1text||'—')+'</td>';
-    th+='<td style="font-size:.78rem;color:#aab;max-width:180px">'+esc(t.p2text||'—')+'</td>';
-    th+='<td style="font-size:.78rem;color:#aab;max-width:180px">'+esc(t.p3text||'—')+'</td></tr>';
-  });
-  ta.innerHTML=th+'</tbody></table>';
+function buildDecisionSummary(phase) {
+  var rows = '';
+  if (phase >= 2) {
+    var obj = G.objective ? (OBJ_DATA[G.objective] ? OBJ_DATA[G.objective].label : G.objective) : '&mdash;';
+    var aud = G.audience  ? (AUD_DATA[G.audience]  ? AUD_DATA[G.audience].label  : G.audience)  : '&mdash;';
+    rows += '<div class="dec-row"><span class="dec-label">Objective</span><span class="dec-val">' + obj + '</span></div>';
+    rows += '<div class="dec-row"><span class="dec-label">Audience</span><span class="dec-val">' + aud + '</span></div>';
+  }
+  if (phase >= 3) {
+    var plat = G.platform ? (PLAT_DATA[G.platform] ? PLAT_DATA[G.platform].label : G.platform) : '&mdash;';
+    var chLabels = G.channels.length
+      ? G.channels.map(function(c) {
+          var cd = CHANNEL_DATA.find(function(x){ return x.id===c.id; });
+          return (cd ? cd.label : c.id) + ' (' + c.role.toUpperCase() + ')';
+        }).join(', ')
+      : '&mdash;';
+    var risk = G.risk ? (G.risk.charAt(0).toUpperCase() + G.risk.slice(1)) : '&mdash;';
+    var ots  = G.otsSet ? G.ots + 'x / week' : '&mdash;';
+    rows += '<div class="dec-row"><span class="dec-label">Platform</span><span class="dec-val">' + plat + '</span></div>';
+    rows += '<div class="dec-row"><span class="dec-label">Channels</span><span class="dec-val">' + chLabels + '</span></div>';
+    rows += '<div class="dec-row"><span class="dec-label">Frequency</span><span class="dec-val">' + ots + '</span></div>';
+    rows += '<div class="dec-row"><span class="dec-label">Risk Profile</span><span class="dec-val">' + risk + '</span></div>';
+  }
+  if (!rows) return '';
+  return [
+    '<div class="decisions-strip open" id="decisionsStrip">',
+    '<div class="decisions-toggle" onclick="this.parentElement.classList.toggle(\'open\')">',
+    '<div class="decisions-toggle-left"><span>&#128193;</span> Your Decisions So Far</div>',
+    '<span class="decisions-chevron">&#9660;</span>',
+    '</div>',
+    '<div class="decisions-body">' + rows + '</div>',
+    '</div>'
+  ].join('');
 }
 
-function admReset(){
-  var list=JSON.parse(localStorage.getItem(LS_KEY)||'[]');
-  list.forEach(function(n){localStorage.removeItem(LS_TEAM+n);});
-  localStorage.removeItem(LS_KEY);
-  document.getElementById('confirmDel').classList.remove('on');
-  admRefresh();
-}
-
-function admCSV(){
-  var teams=getTeams().sort(function(a,b){return(b.spi||0)-(a.spi||0);});
-  if(!teams.length){alert('No data to export.');return;}
-  var hdrs=['Rank','Team','Members','SPI','Profit','CPA','Months','LTV','Risk','Penalty','Bonus','Objective','Audience','Platform','Channels','Hook','Format','Sound','OTS','Orientation','ViewDur','P1Text','P2Text','P3Text'];
-  var rows=[hdrs];
-  teams.forEach(function(t,i){
-    var chs=(t.channels||[]).map(function(c){return c.id+':'+c.role;}).join(';');
-    rows.push([i+1,t.team,t.members||'',t.spi,t.profit.toFixed(2),t.finalCPA.toFixed(2),t.finalMonths,t.ltv.toFixed(2),t.risk||'',t.execPenalty,t.writtenBonus,t.objective||'',t.audience||'',t.platform||'',chs,(t.hooks||[]).join(';'),(t.formats||[]).join(';'),t.sound,t.ots,t.orientation,t.viewDur,t.p1text||'',t.p2text||'',t.p3text||'']);
-  });
-  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='nourishbox-results.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-}
 
 // ── REGISTRATION ────────────────────────────────
 document.getElementById('startBtn').addEventListener('click',function(){
@@ -959,6 +943,7 @@ function startTimer(mins){
 // ── BUILD PHASE 1 ───────────────────────────────
 function buildPhase1(){
   var h='<div class="phase-pill ph1"><span class="dot"></span>Phase 1 · Strategic Foundation · 20 min</div>';
+  h+=BRIEF_HTML;
 
   // Objective
   h+='<div class="qblock">';
@@ -1021,6 +1006,8 @@ function pickAud(k){
 // ── BUILD PHASE 2 ───────────────────────────────
 function buildPhase2(){
   var h='<div class="phase-pill ph2"><span class="dot"></span>Phase 2 · Platform & Channel Strategy · 20 min</div>';
+  h+=BRIEF_HTML;
+  h+=buildDecisionSummary(2);
 
   // Platform
   h+='<div class="qblock">';
@@ -1143,6 +1130,7 @@ function pickRisk(k){
   document.getElementById('rsk_'+k).classList.add('active');
 }
 
+
 // ── SLIDER LOGIC ────────────────────────────────
 function syncSlider(name, val){
   val=Math.round(val);
@@ -1193,6 +1181,8 @@ function sliderTouch(e,name){
 // ── BUILD PHASE 3 ───────────────────────────────
 function buildPhase3(){
   var h='<div class="phase-pill ph3"><span class="dot"></span>Phase 3 · Creative & Execution · 20 min</div>';
+  h+=BRIEF_HTML;
+  h+=buildDecisionSummary(3);
 
   // Hook
   h+='<div class="qblock">';
@@ -1626,6 +1616,12 @@ function saveTeam(){
     if(!list.includes(G.team)){list.push(G.team);localStorage.setItem(LS_KEY,JSON.stringify(list));}
   }catch(e){}
 }
+
+document.getElementById('btnLogin').addEventListener('click',function(){
+  if(document.getElementById('pwIn').value===ADMIN_PW){show('s-admin');admRefresh();}
+  else{document.getElementById('pwErr').classList.add('on');document.getElementById('pwIn').value='';}
+});
+document.getElementById('pwIn').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnLogin').click();});
 </script>
 </body>
 </html>
